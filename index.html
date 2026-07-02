@@ -18,7 +18,7 @@
 
 <div id="app" style="display:none;">
 
-  <h1>軽貨物 点呼アプリ</h1>
+  <h1>BELLE HOUSE SAFETY CHECK</h1>
 
   <button onclick="showPage('home')">ホーム</button>
   <button onclick="showPage('tenkoPage')">点呼入力</button>
@@ -30,7 +30,7 @@
 
   <div id="home">
     <h2>ホーム</h2>
-    <p>メニューから操作してください。</p>
+    <p>Firebase連携版です。スマホとパソコンでデータ共有できます。</p>
   </div>
 
   <div id="tenkoPage" style="display:none;">
@@ -57,7 +57,6 @@
 
   <div id="driverPage" style="display:none;">
     <h2>ドライバー登録</h2>
-
     <input id="driverName" type="text" placeholder="ドライバー名">
     <button onclick="addDriver()">登録</button>
 
@@ -74,6 +73,11 @@
   <div id="historyPage" style="display:none;">
     <h2>点呼履歴</h2>
 
+    <p>ドライバー別表示</p>
+    <select id="historyDriver"></select>
+    <button onclick="renderByDriver()">このドライバーを表示</button>
+
+    <br><br>
     <button onclick="renderToday()">今日のみ表示</button>
     <button onclick="renderAll()">全期間表示</button>
     <button onclick="exportCSV()">CSV出力</button>
@@ -84,7 +88,26 @@
 
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCtj53F9aECPPfP1zQkVg5MPaoKWx7Y_cs",
+  authDomain: "bellehouse-tenko.firebaseapp.com",
+  projectId: "bellehouse-tenko",
+  storageBucket: "bellehouse-tenko.firebasestorage.app",
+  messagingSenderId: "384954757173",
+  appId: "1:384954757173:web:f04243c699bcb4835ac17c"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let drivers = [];
+let tenkoList = [];
+
 function login() {
   const pass = document.getElementById("pass").value;
   const adminPass = "1234";
@@ -92,8 +115,7 @@ function login() {
   if (pass === adminPass) {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("app").style.display = "block";
-
-    loadDrivers();
+    startRealtimeSync();
     showPage("home");
   } else {
     alert("パスワードが違います");
@@ -109,64 +131,70 @@ function showPage(pageId) {
 
   document.getElementById(pageId).style.display = "block";
 
+  if (pageId === "tenkoPage") loadDrivers();
   if (pageId === "driverPage") renderDrivers();
   if (pageId === "missingPage") renderMissing();
-  if (pageId === "historyPage") renderToday();
+  if (pageId === "historyPage") {
+    loadHistoryDrivers();
+    renderToday();
+  }
 }
 
 function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function getDrivers() {
-  return JSON.parse(localStorage.getItem("drivers") || "[]");
+function startRealtimeSync() {
+  db.collection("drivers").orderBy("name").onSnapshot(snapshot => {
+    drivers = [];
+    snapshot.forEach(doc => {
+      drivers.push({ id: doc.id, ...doc.data() });
+    });
+    loadDrivers();
+    renderDrivers();
+    loadHistoryDrivers();
+  });
+
+  db.collection("tenkoRecords").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+    tenkoList = [];
+    snapshot.forEach(doc => {
+      tenkoList.push({ id: doc.id, ...doc.data() });
+    });
+    renderToday();
+  });
 }
 
-function saveDrivers(drivers) {
-  localStorage.setItem("drivers", JSON.stringify(drivers));
-}
-
-function addDriver() {
-  const name = document.getElementById("driverName").value;
+async function addDriver() {
+  const name = document.getElementById("driverName").value.trim();
 
   if (name === "") {
     alert("ドライバー名を入力してください");
     return;
   }
 
-  let drivers = getDrivers();
-
-  if (drivers.includes(name)) {
+  const exists = drivers.some(d => d.name === name);
+  if (exists) {
     alert("すでに登録されています");
     return;
   }
 
-  drivers.push(name);
-  saveDrivers(drivers);
+  await db.collection("drivers").add({
+    name: name,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 
   document.getElementById("driverName").value = "";
-
-  loadDrivers();
-  renderDrivers();
-
   alert("登録しました");
 }
 
-function deleteDriver(index) {
-  let drivers = getDrivers();
-
+async function deleteDriver(id) {
   if (confirm("このドライバーを削除しますか？")) {
-    drivers.splice(index, 1);
-    saveDrivers(drivers);
-    loadDrivers();
-    renderDrivers();
+    await db.collection("drivers").doc(id).delete();
   }
 }
 
 function loadDrivers() {
-  const drivers = getDrivers();
   const select = document.getElementById("namae");
-
   select.innerHTML = "";
 
   if (drivers.length === 0) {
@@ -174,14 +202,14 @@ function loadDrivers() {
     return;
   }
 
-  drivers.forEach(name => {
-    select.innerHTML += `<option>${name}</option>`;
+  drivers.forEach(driver => {
+    select.innerHTML += `<option>${driver.name}</option>`;
   });
 }
 
 function renderDrivers() {
-  const drivers = getDrivers();
   const div = document.getElementById("driverList");
+  if (!div) return;
 
   div.innerHTML = "";
 
@@ -190,17 +218,17 @@ function renderDrivers() {
     return;
   }
 
-  drivers.forEach((name, index) => {
+  drivers.forEach(driver => {
     div.innerHTML += `
       <p>
-        ${name}
-        <button onclick="deleteDriver(${index})">削除</button>
+        ${driver.name}
+        <button onclick="deleteDriver('${driver.id}')">削除</button>
       </p>
     `;
   });
 }
 
-function tenko() {
+async function tenko() {
   const namae = document.getElementById("namae").value;
   const alcohol = document.getElementById("alcohol").value;
   const health = document.getElementById("health").value;
@@ -210,26 +238,20 @@ function tenko() {
     return;
   }
 
-  const data = {
+  await db.collection("tenkoRecords").add({
     name: namae,
     alcohol: alcohol,
     health: health,
     time: new Date().toLocaleString(),
-    date: getToday()
-  };
-
-  let list = JSON.parse(localStorage.getItem("tenkoRekishi") || "[]");
-  list.push(data);
-  localStorage.setItem("tenkoRekishi", JSON.stringify(list));
+    date: getToday(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 
   alert("点呼完了！");
 }
 
 function renderMissing() {
-  const drivers = getDrivers();
-  const list = JSON.parse(localStorage.getItem("tenkoRekishi") || "[]");
   const today = getToday();
-
   const div = document.getElementById("missingList");
   div.innerHTML = "";
 
@@ -239,29 +261,29 @@ function renderMissing() {
   }
 
   drivers.forEach(driver => {
-    const done = list.some(item => item.name === driver && item.date === today);
+    const done = tenkoList.some(item => item.name === driver.name && item.date === today);
 
     if (done) {
-      div.innerHTML += `<p>✅ ${driver}：点呼済み</p>`;
+      div.innerHTML += `<p>✅ ${driver.name}：点呼済み</p>`;
     } else {
-      div.innerHTML += `<p style="color:red;">🔴 ${driver}：未点呼</p>`;
+      div.innerHTML += `<p style="color:red;">🔴 ${driver.name}：未点呼</p>`;
     }
   });
 }
 
 function renderToday() {
-  let list = JSON.parse(localStorage.getItem("tenkoRekishi") || "[]");
   const div = document.getElementById("rekishi");
-  div.innerHTML = "";
+  if (!div) return;
 
+  div.innerHTML = "";
   const today = getToday();
 
-  list.forEach((item, index) => {
+  tenkoList.forEach(item => {
     if (item.date === today) {
       div.innerHTML += `
         <p>
           ${item.time}｜${item.name}｜${item.alcohol}｜${item.health}
-          <button onclick="deleteOne(${index})">削除</button>
+          <button onclick="deleteOne('${item.id}')">削除</button>
         </p>
       `;
     }
@@ -269,38 +291,69 @@ function renderToday() {
 }
 
 function renderAll() {
-  let list = JSON.parse(localStorage.getItem("tenkoRekishi") || "[]");
   const div = document.getElementById("rekishi");
   div.innerHTML = "";
 
-  list.forEach((item, index) => {
+  tenkoList.forEach(item => {
     div.innerHTML += `
       <p>
         ${item.time}｜${item.name}｜${item.alcohol}｜${item.health}
-        <button onclick="deleteOne(${index})">削除</button>
+        <button onclick="deleteOne('${item.id}')">削除</button>
       </p>
     `;
   });
 }
 
-function deleteOne(index) {
-  let list = JSON.parse(localStorage.getItem("tenkoRekishi") || "[]");
-  list.splice(index, 1);
-  localStorage.setItem("tenkoRekishi", JSON.stringify(list));
-  renderToday();
-}
-
-function clearAll() {
-  if (confirm("全部削除しますか？")) {
-    localStorage.removeItem("tenkoRekishi");
-    renderToday();
+async function deleteOne(id) {
+  if (confirm("この点呼記録を削除しますか？")) {
+    await db.collection("tenkoRecords").doc(id).delete();
   }
 }
 
-function exportCSV() {
-  let list = JSON.parse(localStorage.getItem("tenkoRekishi") || "[]");
+async function clearAll() {
+  if (!confirm("全部削除しますか？")) return;
 
-  if (list.length === 0) {
+  for (const item of tenkoList) {
+    await db.collection("tenkoRecords").doc(item.id).delete();
+  }
+
+  alert("削除しました");
+}
+
+function loadHistoryDrivers() {
+  const select = document.getElementById("historyDriver");
+  select.innerHTML = "";
+
+  if (drivers.length === 0) {
+    select.innerHTML = `<option value="">ドライバー未登録</option>`;
+    return;
+  }
+
+  drivers.forEach(driver => {
+    select.innerHTML += `<option>${driver.name}</option>`;
+  });
+}
+
+function renderByDriver() {
+  const driver = document.getElementById("historyDriver").value;
+  const div = document.getElementById("rekishi");
+
+  div.innerHTML = "";
+
+  tenkoList.forEach(item => {
+    if (item.name === driver) {
+      div.innerHTML += `
+        <p>
+          ${item.time}｜${item.name}｜${item.alcohol}｜${item.health}
+          <button onclick="deleteOne('${item.id}')">削除</button>
+        </p>
+      `;
+    }
+  });
+}
+
+function exportCSV() {
+  if (tenkoList.length === 0) {
     alert("データがありません");
     return;
   }
@@ -308,7 +361,7 @@ function exportCSV() {
   const today = getToday();
   let csv = "\uFEFF時間,名前,アルコール,体調\n";
 
-  list.forEach(item => {
+  tenkoList.forEach(item => {
     csv += `${item.time},${item.name},${item.alcohol},${item.health}\n`;
   });
 
