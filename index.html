@@ -132,7 +132,7 @@
   <button onclick="getGps()">GPS取得</button>
   <p id="gpsText">GPS未取得</p>
 
-  <button onclick="submitTenko()">点呼を送信</button>
+<button type="button" onclick="submitTenko()">点呼を送信</button>
   <button class="sub" onclick="logout()">ログアウト</button>
 </div>
 
@@ -219,9 +219,11 @@
   }
 
   async function submitTenko() {
+    alert("送信ボタンは反応しています");
+
     if (!currentUser) {
-      alert("ログインしてください");
-      return;
+        alert("ログインしてください");
+        return;
     }
 
     if (!gpsData) {
