@@ -1,4 +1,4 @@
-const CACHE_NAME = "tenko-app-v1-restore-20260703-2";
+const CACHE_NAME = "tenko-app-v1-gps-20260703-1";
 const ASSETS = ["./","index.html","manifest.json","icon-192.png","icon-512.png"];
 self.addEventListener("install", e => {
   self.skipWaiting();

@@ -11,7 +11,7 @@
     :root{--navy:#0b2341;--bg:#f3f6fa;--card:#fff;--line:#d7e0ea;--text:#0b2341;--muted:#6b7a90;}
     *{box-sizing:border-box}
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
-    header{background:var(--navy);color:white;text-align:center;padding:22px 12px;font-size:26px;font-weight:800;letter-spacing:.02em}
+    header{background:var(--navy);color:white;text-align:center;padding:22px 12px;font-size:26px;font-weight:800}
     main{max-width:980px;margin:24px auto;padding:0 14px}
     .card{background:var(--card);border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 8px 28px rgba(10,30,60,.08)}
     h2{margin:0 0 18px;font-size:24px}.hidden{display:none!important}
@@ -24,6 +24,7 @@
     th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}
     th{background:#eef3f8}.muted{color:var(--muted);font-size:14px}.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:#eef3f8;margin:2px}
     img.photo{max-width:110px;border-radius:8px;border:1px solid var(--line)}
+    a.maplink{font-weight:700;color:#0b2341}
     @media(max-width:700px){header{font-size:21px}.row{grid-template-columns:1fr}.card{padding:18px}button{width:100%;margin-right:0}table{font-size:12px}}
   </style>
 </head>
@@ -42,7 +43,7 @@
     <label>パスワード</label>
     <input id="loginPassword" type="password" placeholder="管理者は 1234">
     <button onclick="login()">ログイン</button>
-    <p class="muted">管理者は <b>admin / 1234</b>。ドライバーは名前と任意のパスワードで入れます。</p>
+    <p class="muted">管理者は <b>admin / 1234</b></p>
   </section>
 
   <section id="driverBox" class="hidden">
@@ -55,6 +56,12 @@
       </div>
       <label>車両番号</label><input id="carNo" placeholder="例：品川480 あ 1234">
       <label>走行前メーター</label><input id="meter" inputmode="numeric" placeholder="例：12345">
+
+      <label>GPS位置情報</label>
+      <button class="ok" onclick="getGPS()">現在地を取得</button>
+      <input id="gpsText" readonly placeholder="未取得">
+      <p class="muted">iPhoneで位置情報の許可を求められたら「許可」を押してください。</p>
+
       <label>写真</label><input id="photo" type="file" accept="image/*" capture="environment">
       <label>備考</label><textarea id="note" rows="3" placeholder="連絡事項など"></textarea>
       <button onclick="submitTenko()">点呼送信</button>
@@ -72,7 +79,7 @@
         <button class="danger" onclick="clearRecords()">履歴クリア</button>
         <button class="secondary" onclick="logout()">ログアウト</button>
       </div>
-      <p class="muted">Ver.1.0 復旧版</p>
+      <p class="muted">Ver.1.0 GPS復旧版</p>
     </div>
 
     <div id="adminRecords" class="card">
@@ -81,7 +88,12 @@
         <div><label>表示</label><select id="filterMode" onchange="renderRecords()"><option value="today">今日のみ</option><option value="all">全期間</option></select></div>
         <div><label>名前検索</label><input id="searchName" oninput="renderRecords()" placeholder="ドライバー名"></div>
       </div>
-      <div style="overflow:auto"><table><thead><tr><th>日時</th><th>名前</th><th>アルコール</th><th>体調</th><th>車両</th><th>メーター</th><th>写真</th><th>備考</th></tr></thead><tbody id="recordBody"></tbody></table></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>日時</th><th>名前</th><th>アルコール</th><th>体調</th><th>車両</th><th>メーター</th><th>GPS</th><th>写真</th><th>備考</th></tr></thead>
+          <tbody id="recordBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <div id="adminDrivers" class="card hidden">
@@ -102,6 +114,7 @@ const ADMIN_PASS = "1234";
 const LS_RECORDS = "tenkoRecords_v1";
 const LS_DRIVERS = "tenkoDrivers_v1";
 let currentUser = "";
+let gpsData = null;
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(()=>{});
@@ -136,13 +149,44 @@ function login(){
 
 function logout(){location.reload();}
 
+function getGPS(){
+  if(!navigator.geolocation){
+    alert("この端末はGPSに対応していません");
+    return;
+  }
+  $("gpsText").value = "取得中...";
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      gpsData = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+        time: nowText()
+      };
+      $("gpsText").value = `緯度:${gpsData.lat.toFixed(6)} 経度:${gpsData.lng.toFixed(6)} 精度:${Math.round(gpsData.accuracy)}m`;
+    },
+    err => {
+      gpsData = null;
+      $("gpsText").value = "取得失敗";
+      alert("GPS取得に失敗しました。iPhoneの設定でSafariの位置情報を許可してください。");
+    },
+    { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+  );
+}
+
 function submitTenko(){
   const file=$("photo").files[0];
   const save=(photoData)=>{
-    const rec={time:nowText(),date:todayKey(),name:currentUser,alcohol:$("alcohol").value,health:$("health").value,carNo:$("carNo").value,meter:$("meter").value,note:$("note").value,photo:photoData||""};
+    const rec={
+      time:nowText(),date:todayKey(),name:currentUser,
+      alcohol:$("alcohol").value,health:$("health").value,
+      carNo:$("carNo").value,meter:$("meter").value,note:$("note").value,
+      gps:gpsData, photo:photoData||""
+    };
     const arr=getRecords(); arr.unshift(rec); setRecords(arr);
     alert("送信完了");
     $("carNo").value=""; $("meter").value=""; $("note").value=""; $("photo").value="";
+    $("gpsText").value="未取得"; gpsData=null;
   };
   if(file){
     const r=new FileReader();
@@ -165,10 +209,11 @@ function renderRecords(){
   let arr=getRecords();
   if(mode==="today") arr=arr.filter(r=>r.date===todayKey());
   if(q) arr=arr.filter(r=>(r.name||"").includes(q));
-  if(!arr.length){body.innerHTML='<tr><td colspan="8">履歴はありません</td></tr>';return;}
+  if(!arr.length){body.innerHTML='<tr><td colspan="9">履歴はありません</td></tr>';return;}
   arr.forEach(r=>{
+    const gps = r.gps ? `<a class="maplink" target="_blank" href="https://www.google.com/maps?q=${r.gps.lat},${r.gps.lng}">地図</a><br><span class="muted">${Number(r.gps.lat).toFixed(5)}, ${Number(r.gps.lng).toFixed(5)}<br>精度:${Math.round(r.gps.accuracy||0)}m</span>` : "";
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${esc(r.time)}</td><td>${esc(r.name)}</td><td>${esc(r.alcohol)}</td><td>${esc(r.health)}</td><td>${esc(r.carNo||"")}</td><td>${esc(r.meter||"")}</td><td>${r.photo?`<img class="photo" src="${r.photo}">`:""}</td><td>${esc(r.note||"")}</td>`;
+    tr.innerHTML=`<td>${esc(r.time)}</td><td>${esc(r.name)}</td><td>${esc(r.alcohol)}</td><td>${esc(r.health)}</td><td>${esc(r.carNo||"")}</td><td>${esc(r.meter||"")}</td><td>${gps}</td><td>${r.photo?`<img class="photo" src="${r.photo}">`:""}</td><td>${esc(r.note||"")}</td>`;
     body.appendChild(tr);
   });
 }
@@ -193,8 +238,15 @@ function renderDrivers(){
 function deleteDriver(i){const arr=getDrivers(); arr.splice(i,1); setDrivers(arr); renderDrivers();}
 
 function downloadCSV(){
-  const rows=[["日時","名前","アルコール","体調","車両番号","メーター","備考"]];
-  getRecords().forEach(r=>rows.push([r.time,r.name,r.alcohol,r.health,r.carNo||"",r.meter||"",r.note||""]));
+  const rows=[["日時","名前","アルコール","体調","車両番号","メーター","緯度","経度","GPS精度m","GoogleMap","備考"]];
+  getRecords().forEach(r=>{
+    rows.push([
+      r.time,r.name,r.alcohol,r.health,r.carNo||"",r.meter||"",
+      r.gps?.lat||"",r.gps?.lng||"",r.gps?.accuracy||"",
+      r.gps?`https://www.google.com/maps?q=${r.gps.lat},${r.gps.lng}`:"",
+      r.note||""
+    ]);
+  });
   const csv=rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\r\n");
   const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="tenko-records.csv"; a.click();
