@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>BELLE HOUSE SAFETY CHECK</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#163a6b">
+  <style>
+    :root{--navy:#163a6b;--navy2:#0f2a4f;--bg:#f4f7fb;--card:#fff;--line:#d6e0ec;--text:#1d2b3a;--muted:#64748b;--ok:#16803c;--danger:#d62828}
+    body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+    #loginBox,#app{max-width:560px;margin:0 auto;padding:18px}
+    h1{text-align:center;color:var(--navy);font-size:25px;margin:12px 0 18px;letter-spacing:1px}
+    h2{color:var(--navy);border-bottom:2px solid var(--navy);padding-bottom:8px;margin-top:0}
+    h3{color:var(--navy)}
+    .box,#home,#tenkoPage,#driverPage,#missingPage,#historyPage,#driverHome{background:var(--card);border-radius:18px;padding:18px;margin-top:14px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+    .loginTabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+    .loginTabs button{width:100%;background:#e8eef7;color:var(--navy)}
+    .loginTabs button.active{background:var(--navy);color:white}
+    button{background:var(--navy);color:white;border:none;border-radius:12px;padding:13px 15px;margin:5px 3px;font-weight:bold;font-size:15px;cursor:pointer}
+    button:hover{background:var(--navy2)}
+    button.secondary{background:#e8eef7;color:var(--navy)}
+    button.dangerBtn{background:var(--danger);color:white}
+    input,select,textarea{width:100%;padding:13px;border-radius:12px;border:1px solid #b8c7d9;background:white;color:var(--text);font-size:16px;box-sizing:border-box;margin:5px 0 12px}
+    .menu button{width:100%;text-align:left;margin:6px 0}
+    .dashboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+    .card{background:#f7f9fc;border-left:6px solid var(--navy);border-radius:14px;padding:14px}
+    .card p{margin:0;font-size:14px;color:var(--muted)}
+    .card h3{margin:8px 0 0;font-size:22px;color:var(--navy)}
+    .record,#driverList p,#missingList p,#homeMissingList p{background:#f7f9fc;border-left:6px solid var(--navy);padding:13px;border-radius:12px;margin:10px 0;line-height:1.6}
+    .danger{color:var(--danger);font-weight:bold}.ok{color:var(--ok);font-weight:bold}.muted{color:var(--muted);font-size:13px}
+    hr{border:none;border-top:1px solid var(--line);margin:15px 0}.hidden{display:none!important}
+    .topbar{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+    .roleBadge{background:#e8eef7;color:var(--navy);padding:7px 10px;border-radius:999px;font-weight:bold;font-size:13px}
+    @media(max-width:420px){#loginBox,#app{padding:12px}h1{font-size:22px}.dashboard{grid-template-columns:1fr}button{width:100%;margin:6px 0}}
+  </style>
+</head>
+<body>
+
+<div id="loginBox">
+  <div class="box">
+    <h2>BELLE HOUSE<br>SAFETY CHECK</h2>
+    <div class="loginTabs">
+      <button id="adminTab" class="active" onclick="switchLogin('admin')">管理者</button>
+      <button id="driverTab" onclick="switchLogin('driver')">ドライバー</button>
+    </div>
+    <div id="adminLogin">
+      <p>管理者パスワード</p>
+      <input id="adminPass" type="password" placeholder="パスワード">
+      <button onclick="adminLogin()">管理者ログイン</button>
+    </div>
+    <div id="driverLogin" class="hidden">
+      <p>ドライバー名</p>
+      <select id="loginDriver"></select>
+      <p>ドライバーパスワード</p>
+      <input id="driverPass" type="password" placeholder="共通パスワード">
+      <button onclick="driverLogin()">ドライバーログイン</button>
+      <p class="muted">初期パスワード：0000</p>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="roleBadge" id="roleText">-</div>
+    <button class="secondary" onclick="logout()">ログアウト</button>
+  </div>
+  <h1>BELLE HOUSE<br>SAFETY CHECK</h1>
+
+  <div id="adminMenu" class="menu hidden">
+    <button onclick="showPage('home')">🏠 管理者ホーム</button>
+    <button onclick="showPage('tenkoPage')">🚚 点呼入力</button>
+    <button onclick="showPage('driverPage')">👥 ドライバー登録</button>
+    <button onclick="showPage('missingPage')">⚠ 未点呼確認</button>
+    <button onclick="showPage('historyPage')">📋 点呼履歴・修正</button>
+  </div>
+
+  <div id="driverMenu" class="menu hidden">
+    <button onclick="showPage('driverHome')">🚚 自分の点呼</button>
+    <button onclick="showPage('historyPage')">📋 自分の履歴</button>
+  </div>
+
+  <hr>
+
+  <div id="home" class="page">
+    <h2>管理者ホーム</h2>
+    <div class="dashboard">
+      <div class="card"><p>📅 今日</p><h3 id="todayText">-</h3></div>
+      <div class="card"><p>👥 登録ドライバー</p><h3 id="driverCount">0人</h3></div>
+      <div class="card"><p>🟢 点呼済み</p><h3 id="doneCount">0人</h3></div>
+      <div class="card"><p>🔴 未点呼</p><h3 id="missingCount">0人</h3></div>
+    </div>
+    <h3>未点呼ドライバー</h3>
+    <div id="homeMissingList"></div>
+  </div>
+
+  <div id="driverHome" class="page" style="display:none;">
+    <h2>ドライバー点呼</h2>
+    <p id="driverWelcome"></p>
+    <p>アルコールチェック</p>
+    <select id="driverAlcohol"><option>異常なし</option><option>異常あり</option></select>
+    <p>体調</p>
+    <select id="driverHealth"><option>良好</option><option>不良</option></select>
+    <button onclick="driverTenko()">点呼する</button>
+    <h3>今日の自分の点呼</h3>
+    <div id="driverTodayList"></div>
+  </div>
+
+  <div id="tenkoPage" class="page" style="display:none;">
+    <h2>点呼入力</h2>
+    <p>名前</p><select id="namae"></select>
+    <p>アルコールチェック</p><select id="alcohol"><option>異常なし</option><option>異常あり</option></select>
+    <p>体調</p><select id="health"><option>良好</option><option>不良</option></select>
+    <button onclick="tenko()">点呼する</button>
+  </div>
+
+  <div id="driverPage" class="page" style="display:none;">
+    <h2>ドライバー登録</h2>
+    <input id="driverName" type="text" placeholder="ドライバー名">
+    <button onclick="addDriver()">登録</button>
+    <h3>登録ドライバー</h3>
+    <div id="driverList"></div>
+  </div>
+
+  <div id="missingPage" class="page" style="display:none;">
+    <h2>未点呼確認</h2>
+    <button onclick="renderMissing()">未点呼を確認</button>
+    <div id="missingList"></div>
+  </div>
+
+  <div id="historyPage" class="page" style="display:none;">
+    <h2 id="historyTitle">点呼履歴</h2>
+
+    <div id="adminHistoryControls">
+      <p>ドライバー別表示</p><select id="historyDriver"></select>
+      <button onclick="renderByDriver()">このドライバーを表示</button>
+      <p>月別履歴</p><input id="monthSelect" type="month">
+      <button onclick="renderMonthly()">月別表示</button>
+      <button onclick="renderToday()">今日のみ表示</button>
+      <button onclick="renderAll()">全期間表示</button>
+      <button onclick="exportCSV()">CSV出力</button>
+      <button class="dangerBtn" onclick="clearAll()">履歴クリア</button>
+    </div>
+
+    <div id="driverHistoryControls" class="hidden">
+      <p>月別履歴</p><input id="driverMonthSelect" type="month">
+      <button onclick="renderDriverMonthly()">月別表示</button>
+      <button onclick="renderMyHistory()">自分の履歴を表示</button>
+    </div>
+
+    <div id="rekishi"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyCtj53F9aECPPfP1zQkVg5MPaoKWx7Y_cs",authDomain:"bellehouse-tenko.firebaseapp.com",projectId:"bellehouse-tenko",storageBucket:"bellehouse-tenko.firebasestorage.app",messagingSenderId:"384954757173",appId:"1:384954757173:web:f04243c699bcb4835ac17c"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+let drivers=[],tenkoList=[],currentRole="",currentDriverName="",syncStarted=false;
+startRealtimeSync();
+
+function switchLogin(type){document.getElementById("adminLogin").classList.toggle("hidden",type!=="admin");document.getElementById("driverLogin").classList.toggle("hidden",type!=="driver");document.getElementById("adminTab").classList.toggle("active",type==="admin");document.getElementById("driverTab").classList.toggle("active",type==="driver");loadLoginDrivers();}
+function adminLogin(){if(document.getElementById("adminPass").value!=="1234"){alert("パスワードが違います");return;}currentRole="admin";currentDriverName="";openApp();showPage("home");}
+function driverLogin(){const name=document.getElementById("loginDriver").value;const pass=document.getElementById("driverPass").value;if(!name){alert("ドライバーを選んでください");return;}if(pass!=="0000"){alert("ドライバーパスワードが違います");return;}currentRole="driver";currentDriverName=name;openApp();showPage("driverHome");}
+function openApp(){document.getElementById("loginBox").style.display="none";document.getElementById("app").style.display="block";const isAdmin=currentRole==="admin";document.getElementById("adminMenu").classList.toggle("hidden",!isAdmin);document.getElementById("driverMenu").classList.toggle("hidden",isAdmin);document.getElementById("roleText").textContent=isAdmin?"管理者モード":"ドライバー："+currentDriverName;document.getElementById("adminHistoryControls").classList.toggle("hidden",!isAdmin);document.getElementById("driverHistoryControls").classList.toggle("hidden",isAdmin);updateAllViews();}
+function logout(){currentRole="";currentDriverName="";document.getElementById("app").style.display="none";document.getElementById("loginBox").style.display="block";}
+function showPage(pageId){document.querySelectorAll(".page").forEach(p=>p.style.display="none");document.getElementById(pageId).style.display="block";if(pageId==="home")updateDashboard();if(pageId==="driverHome")renderDriverHome();if(pageId==="tenkoPage")loadDrivers();if(pageId==="driverPage")renderDrivers();if(pageId==="missingPage")renderMissing();if(pageId==="historyPage"){loadHistoryDrivers();if(currentRole==="admin"){document.getElementById("historyTitle").textContent="点呼履歴・修正";renderToday();}else{document.getElementById("historyTitle").textContent="自分の点呼履歴";renderMyHistory();}}}
+function getToday(){return new Date().toISOString().slice(0,10);}
+function startRealtimeSync(){if(syncStarted)return;syncStarted=true;db.collection("drivers").orderBy("name").onSnapshot(s=>{drivers=[];s.forEach(doc=>drivers.push({id:doc.id,...doc.data()}));updateAllViews();});db.collection("tenkoRecords").orderBy("createdAt","desc").onSnapshot(s=>{tenkoList=[];s.forEach(doc=>tenkoList.push({id:doc.id,...doc.data()}));updateAllViews();});}
+function updateAllViews(){loadLoginDrivers();loadDrivers();loadHistoryDrivers();updateDashboard();renderDrivers();renderMissing();renderDriverHome();const hp=document.getElementById("historyPage");if(hp&&hp.style.display!=="none"){if(currentRole==="admin")renderToday();if(currentRole==="driver")renderMyHistory();}}
+function loadLoginDrivers(){const select=document.getElementById("loginDriver");if(!select)return;select.innerHTML="";if(drivers.length===0){select.innerHTML=`<option value="">ドライバー未登録</option>`;return;}drivers.forEach(d=>select.innerHTML+=`<option>${escapeHtml(d.name)}</option>`);}
+function loadDrivers(){const select=document.getElementById("namae");if(!select)return;select.innerHTML="";if(drivers.length===0){select.innerHTML=`<option value="">ドライバー未登録</option>`;return;}drivers.forEach(d=>select.innerHTML+=`<option>${escapeHtml(d.name)}</option>`);}
+function loadHistoryDrivers(){const select=document.getElementById("historyDriver");if(!select)return;select.innerHTML="";if(drivers.length===0){select.innerHTML=`<option value="">ドライバー未登録</option>`;return;}drivers.forEach(d=>select.innerHTML+=`<option>${escapeHtml(d.name)}</option>`);}
+function updateDashboard(){const todayText=document.getElementById("todayText");if(!todayText)return;const today=getToday();todayText.textContent=today;const doneNames=new Set(tenkoList.filter(i=>i.date===today).map(i=>i.name));document.getElementById("driverCount").textContent=drivers.length+"人";document.getElementById("doneCount").textContent=doneNames.size+"人";document.getElementById("missingCount").textContent=(drivers.length-doneNames.size)+"人";const div=document.getElementById("homeMissingList");div.innerHTML="";drivers.forEach(d=>{if(!doneNames.has(d.name))div.innerHTML+=`<p class="danger">🔴 ${escapeHtml(d.name)}</p>`;});if(div.innerHTML==="")div.innerHTML=`<p class="ok">✅ 全員点呼済みです</p>`;}
+async function addDriver(){if(currentRole!=="admin"){alert("管理者のみ操作できます");return;}const name=document.getElementById("driverName").value.trim();if(name===""){alert("ドライバー名を入力してください");return;}if(drivers.some(d=>d.name===name)){alert("すでに登録されています");return;}await db.collection("drivers").add({name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById("driverName").value="";alert("登録しました");}
+async function deleteDriver(id){if(currentRole!=="admin"){alert("管理者のみ操作できます");return;}if(confirm("このドライバーを削除しますか？"))await db.collection("drivers").doc(id).delete();}
+function renderDrivers(){const div=document.getElementById("driverList");if(!div)return;div.innerHTML="";if(drivers.length===0){div.innerHTML="<p>まだ登録されていません。</p>";return;}drivers.forEach(d=>div.innerHTML+=`<p>${escapeHtml(d.name)} <button class="dangerBtn" onclick="deleteDriver('${d.id}')">削除</button></p>`);}
+async function tenko(){const namae=document.getElementById("namae").value,alcohol=document.getElementById("alcohol").value,health=document.getElementById("health").value;if(namae===""){alert("ドライバーを登録してください");return;}await saveTenko(namae,alcohol,health);alert("点呼完了！");showPage("home");}
+async function driverTenko(){if(currentRole!=="driver"){alert("ドライバーとしてログインしてください");return;}await saveTenko(currentDriverName,document.getElementById("driverAlcohol").value,document.getElementById("driverHealth").value);alert("点呼完了！");renderDriverHome();}
+async function saveTenko(name,alcohol,health){await db.collection("tenkoRecords").add({name,alcohol,health,time:new Date().toLocaleString(),date:getToday(),updatedAt:null,createdAt:firebase.firestore.FieldValue.serverTimestamp()});}
+function renderDriverHome(){const welcome=document.getElementById("driverWelcome");if(!welcome)return;welcome.textContent=currentDriverName?currentDriverName+"さん、点呼を入力してください。":"";const div=document.getElementById("driverTodayList");if(!div)return;const today=getToday();const myToday=tenkoList.filter(i=>i.name===currentDriverName&&i.date===today);div.innerHTML="";if(myToday.length===0){div.innerHTML="<p>今日はまだ点呼していません。</p>";return;}myToday.forEach(i=>div.innerHTML+=recordHtml(i,false));}
+function renderMissing(){const div=document.getElementById("missingList");if(!div)return;const today=getToday();const doneNames=new Set(tenkoList.filter(i=>i.date===today).map(i=>i.name));div.innerHTML="";if(drivers.length===0){div.innerHTML="<p>ドライバーが登録されていません。</p>";return;}drivers.forEach(d=>{div.innerHTML+=doneNames.has(d.name)?`<p class="ok">✅ ${escapeHtml(d.name)}：点呼済み</p>`:`<p class="danger">🔴 ${escapeHtml(d.name)}：未点呼</p>`;});}
+function renderToday(){const div=document.getElementById("rekishi");renderRecordList(div,tenkoList.filter(i=>i.date===getToday()),currentRole==="admin");}
+function renderAll(){renderRecordList(document.getElementById("rekishi"),tenkoList,currentRole==="admin");}
+function renderByDriver(){const driver=document.getElementById("historyDriver").value;renderRecordList(document.getElementById("rekishi"),tenkoList.filter(i=>i.name===driver),currentRole==="admin");}
+function renderMonthly(){const driver=document.getElementById("historyDriver").value,month=document.getElementById("monthSelect").value,div=document.getElementById("rekishi");if(driver===""||month===""){alert("ドライバーと月を選んでください");return;}const list=tenkoList.filter(i=>i.name===driver&&i.date&&i.date.startsWith(month));div.innerHTML=`<h3>${escapeHtml(driver)}｜${month}</h3><p>点呼回数：${list.length}回</p>`;list.forEach(i=>div.innerHTML+=recordHtml(i,currentRole==="admin"));if(list.length===0)div.innerHTML+="<p>この月の点呼記録はありません。</p>";}
+function renderMyHistory(){renderRecordList(document.getElementById("rekishi"),tenkoList.filter(i=>i.name===currentDriverName),false);}
+function renderDriverMonthly(){const month=document.getElementById("driverMonthSelect").value,div=document.getElementById("rekishi");if(month===""){alert("月を選んでください");return;}const list=tenkoList.filter(i=>i.name===currentDriverName&&i.date&&i.date.startsWith(month));div.innerHTML=`<h3>${escapeHtml(currentDriverName)}｜${month}</h3><p>点呼回数：${list.length}回</p>`;list.forEach(i=>div.innerHTML+=recordHtml(i,false));if(list.length===0)div.innerHTML+="<p>この月の点呼記録はありません。</p>";}
+function renderRecordList(div,list,canEdit){if(!div)return;div.innerHTML="";if(list.length===0){div.innerHTML="<p>点呼記録はありません。</p>";return;}list.forEach(i=>div.innerHTML+=recordHtml(i,canEdit));}
+function recordHtml(item,canEdit){const edited=item.updatedAt?`<span class="muted">（修正済み）</span>`:"";const buttons=canEdit?`<br><button onclick="editRecord('${item.id}')">修正</button><button class="dangerBtn" onclick="deleteOne('${item.id}')">削除</button>`:"";return `<div class="record"><strong>${escapeHtml(item.name||"")}</strong> ${edited}<br>${escapeHtml(item.time||"")}<br>アルコール：${escapeHtml(item.alcohol||"")}<br>体調：${escapeHtml(item.health||"")}${buttons}</div>`;}
+async function editRecord(id){if(currentRole!=="admin"){alert("管理者のみ修正できます");return;}const item=tenkoList.find(r=>r.id===id);if(!item){alert("記録が見つかりません");return;}const newAlcohol=prompt("アルコールチェックを入力してください",item.alcohol||"異常なし");if(newAlcohol===null)return;const newHealth=prompt("体調を入力してください",item.health||"良好");if(newHealth===null)return;const newName=prompt("名前を入力してください",item.name||"");if(newName===null||newName.trim()==="")return;await db.collection("tenkoRecords").doc(id).update({name:newName.trim(),alcohol:newAlcohol.trim(),health:newHealth.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});alert("修正しました");}
+async function deleteOne(id){if(currentRole!=="admin"){alert("管理者のみ削除できます");return;}if(confirm("この点呼記録を削除しますか？"))await db.collection("tenkoRecords").doc(id).delete();}
+async function clearAll(){if(currentRole!=="admin"){alert("管理者のみ削除できます");return;}if(!confirm("全部削除しますか？"))return;for(const item of tenkoList){await db.collection("tenkoRecords").doc(item.id).delete();}alert("削除しました");}
+function exportCSV(){if(tenkoList.length===0){alert("データがありません");return;}const today=getToday();let csv="\uFEFF時間,名前,アルコール,体調\n";tenkoList.forEach(i=>{csv+=`${i.time},${i.name},${i.alcohol},${i.health}\n`;});const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`tenko_${today}.csv`;a.click();URL.revokeObjectURL(url);}
+function escapeHtml(value){return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+</script>
+</body>
+</html>
