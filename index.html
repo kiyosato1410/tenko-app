@@ -111,10 +111,37 @@ p {
   <hr>
 
   <div id="home">
-    <h2>ホーム</h2>
-    <p>Firebase連携版です。スマホとパソコンでデータ共有できます。</p>
+  <h2>管理者ホーム</h2>
+
+  <div class="dashboard">
+    <div class="card">
+      <p>📅 今日</p>
+      <h3 id="todayText"></h3>
+    </div>
+
+    <div class="card">
+      <p>👥 登録ドライバー</p>
+      <h3 id="driverCount">0人</h3>
+    </div>
+
+    <div class="card">
+      <p>🟢 点呼済み</p>
+      <h3 id="doneCount">0人</h3>
+    </div>
+
+    <div class="card">
+      <p>🔴 未点呼</p>
+      <h3 id="missingCount">0人</h3>
+    </div>
   </div>
 
+  <h3>未点呼ドライバー</h3>
+  <div id="homeMissingList"></div>
+
+  <button onclick="showPage('tenkoPage')">🚚 点呼入力へ</button>
+  <button onclick="showPage('driverPage')">👥 ドライバー管理へ</button>
+  <button onclick="showPage('historyPage')">📋 点呼履歴へ</button>
+</div>
   <div id="tenkoPage" style="display:none;">
     <h2>点呼入力</h2>
 
@@ -159,6 +186,10 @@ p {
     <select id="historyDriver"></select>
     <button onclick="renderByDriver()">このドライバーを表示</button>
 
+    <p>月別履歴</p>
+<input id="monthSelect" type="month">
+<button onclick="renderMonthly()">月別表示</button>
+
     <br><br>
     <button onclick="renderToday()">今日のみ表示</button>
     <button onclick="renderAll()">全期間表示</button>
@@ -175,6 +206,75 @@ p {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
+
+  function updateDashboard() {
+
+  const today = getToday();
+
+  document.getElementById("todayText").textContent = today;
+
+  document.getElementById("driverCount").textContent =
+      drivers.length + "人";
+
+  const done = tenkoList.filter(item => item.date === today);
+
+  document.getElementById("doneCount").textContent =
+      done.length + "人";
+
+  document.getElementById("missingCount").textContent =
+      (drivers.length - done.length) + "人";
+
+  const div = document.getElementById("homeMissingList");
+  div.innerHTML = "";
+
+  drivers.forEach(driver => {
+
+    const ok = done.some(item => item.name === driver.name);
+
+    if (!ok) {
+      div.innerHTML += `
+        <p style="color:red;">
+          🔴 ${driver.name}
+        </p>
+      `;
+    }
+
+  });
+
+}
+
+  function renderMonthly() {
+  const driver = document.getElementById("historyDriver").value;
+  const month = document.getElementById("monthSelect").value;
+  const div = document.getElementById("rekishi");
+
+  div.innerHTML = "";
+
+  if (driver === "" || month === "") {
+    alert("ドライバーと月を選んでください");
+    return;
+  }
+
+  const monthlyList = tenkoList.filter(item => {
+    return item.name === driver && item.date.startsWith(month);
+  });
+
+  if (monthlyList.length === 0) {
+    div.innerHTML = "<p>この月の点呼記録はありません。</p>";
+    return;
+  }
+
+  div.innerHTML += `<h3>${driver}｜${month} の点呼履歴</h3>`;
+  div.innerHTML += `<p>点呼回数：${monthlyList.length}回</p>`;
+
+  monthlyList.forEach(item => {
+    div.innerHTML += `
+      <p>
+        ${item.time}｜${item.name}｜${item.alcohol}｜${item.health}
+      </p>
+    `;
+  });
+}
 const firebaseConfig = {
   apiKey: "AIzaSyCtj53F9aECPPfP1zQkVg5MPaoKWx7Y_cs",
   authDomain: "bellehouse-tenko.firebaseapp.com",
