@@ -266,9 +266,9 @@
       gpsData = null;
 
     } catch (error) {
-      console.error(error);
-      alert("送信に失敗しました");
-    }
+  console.error(error);
+  alert("送信に失敗しました：" + error.message);
+}
   }
 
   async function loadRecords() {
