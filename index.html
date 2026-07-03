@@ -1,17 +1,120 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BELLE HOUSE 点呼システム Ver.2.0</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#071f3d"><link rel="apple-touch-icon" href="icon-192.png"><style>
-:root{--navy:#071f3d;--navy2:#0d335f;--bg:#f4f7fb;--card:#fff;--line:#d8e2ee;--text:#09233f;--muted:#68788d;--ok:#0f7b45;--ng:#b42318;--warn:#b54708}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text)}header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:20px 14px;text-align:center;position:sticky;top:0;z-index:5;box-shadow:0 2px 14px rgba(0,0,0,.14)}header h1{margin:0;font-size:24px;letter-spacing:.04em}header small{display:block;margin-top:4px;opacity:.85}main{max-width:1080px;margin:22px auto;padding:0 14px}.card{background:var(--card);border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 10px 30px rgba(8,30,60,.08)}h2{margin:0 0 18px;font-size:23px}.hidden{display:none!important}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}label{display:block;margin:13px 0 6px;font-weight:800}input,select,textarea{width:100%;padding:13px 14px;border:1px solid #cbd8e8;border-radius:11px;font-size:16px;background:#fff}textarea{min-height:82px}button{border:0;border-radius:11px;padding:13px 16px;font-size:16px;font-weight:800;cursor:pointer;background:var(--navy);color:white;margin:7px 6px 7px 0}button.secondary{background:#55677c}.danger{background:var(--ng)}.ok{background:var(--ok)}.warn{background:var(--warn)}.nav button{width:auto}.muted{color:var(--muted);font-size:13px}.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#eef4fa;margin:3px;font-weight:700}.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:8px}.check{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fbfdff}.check label{margin:0;font-weight:700;display:flex;gap:8px;align-items:flex-start}.check input{width:auto;margin-top:4px}table{width:100%;border-collapse:collapse;background:white;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:9px;text-align:left;vertical-align:top}th{background:#edf3fa;white-space:nowrap}.status-ok{color:var(--ok);font-weight:900}.status-ng{color:var(--ng);font-weight:900}.photo{max-width:105px;border-radius:9px;border:1px solid var(--line)}.tabs{display:flex;gap:8px;flex-wrap:wrap}.notice{border-left:5px solid var(--navy);background:#f1f6fc;padding:12px;border-radius:10px}.maplink{font-weight:900;color:#071f3d}@media(max-width:760px){header h1{font-size:20px}.grid,.checks{grid-template-columns:1fr}.card{padding:17px}button{width:100%;margin-right:0}.nav button{width:100%}table{font-size:12px}}
-</style></head><body><header><h1>BELLE HOUSE 点呼システム</h1><small>Ver.2.0 / 軽貨物安全確認対応</small></header><main>
-<section id="loginBox" class="card"><h2>ログイン</h2><div class="grid"><div><label>ログイン区分</label><select id="loginType"><option value="driver">ドライバー</option><option value="admin">管理者</option></select></div><div><label>名前または管理者ID</label><input id="loginName" placeholder="ドライバー名 / admin"></div></div><label>パスワード</label><input id="loginPassword" type="password" placeholder="管理者は 1234 / ドライバーは任意"><button onclick="login()">ログイン</button><p class="muted">管理者：<b>admin / 1234</b></p></section>
-<section id="driverBox" class="hidden"><div class="card"><h2>点呼入力</h2><p><span id="driverName" class="pill"></span></p><div class="grid"><div><label>点呼区分</label><select id="rollcallType"><option>乗務前点呼</option><option>乗務後点呼</option><option>中間点呼</option></select></div><div><label>点呼方法</label><select id="rollcallMethod"><option>対面</option><option>電話</option><option>IT/ビデオ</option><option>その他</option></select></div><div><label>車両番号</label><input id="carNo" placeholder="例：品川480 あ 1234"></div><div><label>走行距離メーター</label><input id="meter" inputmode="numeric" placeholder="例：12345"></div></div><h2 style="margin-top:24px">法令・安全チェック</h2><p class="notice">問題がある場合は運行しないでください。アルコール確認は検知器使用を前提に記録します。</p><div class="checks"><div class="check"><label><input type="checkbox" id="alcDevice">アルコール検知器を使用した</label></div><div class="check"><label><input type="checkbox" id="alcNone">酒気帯びなし</label></div><div class="check"><label><input type="checkbox" id="healthGood">疾病・疲労・睡眠不足なし</label></div><div class="check"><label><input type="checkbox" id="licenseOk">運転免許証を携帯・有効確認</label></div><div class="check"><label><input type="checkbox" id="dailyInspection">日常点検を実施</label></div><div class="check"><label><input type="checkbox" id="vehicleOk">車両に異常なし</label></div><div class="check"><label><input type="checkbox" id="tireOk">タイヤ・灯火・ブレーキ確認</label></div><div class="check"><label><input type="checkbox" id="cargoOk">積荷・荷崩れ防止確認</label></div><div class="check"><label><input type="checkbox" id="restOk">休憩・拘束時間に無理なし</label></div><div class="check"><label><input type="checkbox" id="instructionOk">運行上の注意事項を確認</label></div></div><div class="grid"><div><label>アルコール数値</label><input id="alcValue" inputmode="decimal" placeholder="例：0.00 mg/L"></div><div><label>異常・指示事項</label><input id="instruction" placeholder="例：特になし"></div></div><label>GPS位置情報</label><button class="ok" onclick="getGPS()">現在地を取得</button><input id="gpsText" readonly placeholder="未取得"><label>写真</label><input id="photo" type="file" accept="image/*" capture="environment"><label>備考</label><textarea id="note" placeholder="体調・車両・道路状況・帰庫後報告など"></textarea><button onclick="submitTenko()">点呼送信</button><button class="secondary" onclick="logout()">ログアウト</button></div></section>
-<section id="adminBox" class="hidden"><div class="card"><h2>管理者ホーム</h2><div class="tabs nav"><button onclick="showAdmin('records')">点呼履歴</button><button onclick="showAdmin('drivers')">ドライバー登録</button><button onclick="showAdmin('daily')">日常点検項目</button><button onclick="downloadCSV()">CSV出力</button><button class="danger" onclick="clearRecords()">履歴クリア</button><button class="secondary" onclick="logout()">ログアウト</button></div></div><div id="adminRecords" class="card"><h2>点呼履歴</h2><div class="grid"><div><label>表示</label><select id="filterMode" onchange="renderRecords()"><option value="today">今日のみ</option><option value="all">全期間</option></select></div><div><label>名前検索</label><input id="searchName" oninput="renderRecords()" placeholder="ドライバー名"></div></div><div style="overflow:auto"><table><thead><tr><th>判定</th><th>日時</th><th>区分</th><th>名前</th><th>車両</th><th>安全チェック</th><th>GPS</th><th>写真</th><th>備考</th></tr></thead><tbody id="recordBody"></tbody></table></div></div><div id="adminDrivers" class="card hidden"><h2>ドライバー登録</h2><div class="grid"><div><label>ドライバー名</label><input id="newDriverName" placeholder="例：佐藤 太郎"></div><div><label>電話番号</label><input id="newDriverTel" placeholder="例：090-0000-0000"></div><div><label>免許証期限</label><input id="newDriverLicense" type="date"></div><div><label>備考</label><input id="newDriverMemo" placeholder="初任/高齢者/適性診断など"></div></div><button onclick="addDriver()">登録</button><div style="overflow:auto"><table><thead><tr><th>名前</th><th>電話</th><th>免許期限</th><th>備考</th><th>登録日</th><th>操作</th></tr></thead><tbody id="driverBody"></tbody></table></div></div><div id="adminDaily" class="card hidden"><h2>日常点検項目</h2><p class="notice">点呼時に確認する車両・運行前チェックの例です。</p><ul><li>ブレーキの効き具合</li><li>タイヤの空気圧・亀裂・溝</li><li>灯火類・方向指示器</li><li>エンジン・異音・オイル・冷却水</li><li>ワイパー・ミラー・ガラス</li><li>積荷固定・過積載防止</li></ul></div></section></main>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BELLE HOUSE 点呼システム Ver.2.0</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#071f3d">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--navy:#071f3d;--bg:#f4f7fb;--card:#fff;--line:#d8e2ee;--text:#09233f;--muted:#68788d;--ok:#0f7b45;--ng:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text)}
+header{background:var(--navy);color:#fff;padding:22px;text-align:center}header h1{margin:0;font-size:24px}header small{opacity:.85}
+main{max-width:1050px;margin:22px auto;padding:0 14px}.card{background:var(--card);border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 10px 30px rgba(8,30,60,.08)}
+h2{margin:0 0 18px}.hidden{display:none!important}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;margin:13px 0 6px;font-weight:800}input,select,textarea{width:100%;padding:13px;border:1px solid #cbd8e8;border-radius:11px;font-size:16px}
+button{border:0;border-radius:11px;padding:13px 16px;font-size:16px;font-weight:800;background:var(--navy);color:white;margin:7px 6px 7px 0}.secondary{background:#55677c}.danger{background:var(--ng)}.okbtn{background:var(--ok)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check{border:1px solid var(--line);border-radius:12px;padding:11px}.check label{margin:0;display:flex;gap:8px}.check input{width:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:9px;text-align:left;vertical-align:top}th{background:#edf3fa}
+.muted{color:var(--muted);font-size:13px}.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#eef4fa}.photo{max-width:100px;border-radius:8px}.status-ok{color:var(--ok);font-weight:900}.status-ng{color:var(--ng);font-weight:900}
+@media(max-width:760px){.grid,.checks{grid-template-columns:1fr}.card{padding:17px}button{width:100%;margin-right:0}table{font-size:12px}}
+</style>
+</head>
+<body>
+<header><h1>BELLE HOUSE 点呼システム</h1><small>Ver.2.0 / 軽貨物安全確認対応</small></header>
+<main>
+<section id="loginBox" class="card">
+<h2>ログイン</h2>
+<div class="grid">
+<div><label>ログイン区分</label><select id="loginType"><option value="driver">ドライバー</option><option value="admin">管理者</option></select></div>
+<div><label>名前または管理者ID</label><input id="loginName" placeholder="ドライバー名 / admin"></div>
+</div>
+<label>パスワード</label><input id="loginPassword" type="password" placeholder="管理者は 1234 / ドライバーは任意">
+<button id="loginBtn" type="button">ログイン</button>
+<p class="muted">管理者：<b>admin / 1234</b></p>
+</section>
+
+<section id="driverBox" class="hidden">
+<div class="card">
+<h2>点呼入力</h2><p><span id="driverName" class="pill"></span></p>
+<div class="grid">
+<div><label>点呼区分</label><select id="rollcallType"><option>乗務前点呼</option><option>乗務後点呼</option><option>中間点呼</option></select></div>
+<div><label>点呼方法</label><select id="rollcallMethod"><option>対面</option><option>電話</option><option>IT/ビデオ</option><option>その他</option></select></div>
+<div><label>車両番号</label><input id="carNo"></div><div><label>走行距離メーター</label><input id="meter" inputmode="numeric"></div>
+</div>
+<h2 style="margin-top:24px">法令・安全チェック</h2>
+<div class="checks" id="checkArea"></div>
+<div class="grid"><div><label>アルコール数値</label><input id="alcValue" placeholder="0.00 mg/L"></div><div><label>異常・指示事項</label><input id="instruction" placeholder="特になし"></div></div>
+<label>GPS位置情報</label><button class="okbtn" type="button" id="gpsBtn">現在地を取得</button><input id="gpsText" readonly placeholder="未取得">
+<label>写真</label><input id="photo" type="file" accept="image/*" capture="environment">
+<label>備考</label><textarea id="note"></textarea>
+<button type="button" id="submitBtn">点呼送信</button><button class="secondary" type="button" id="logoutBtn1">ログアウト</button>
+</div>
+</section>
+
+<section id="adminBox" class="hidden">
+<div class="card"><h2>管理者ホーム</h2>
+<button type="button" id="tabRecords">点呼履歴</button><button type="button" id="tabDrivers">ドライバー登録</button><button type="button" id="csvBtn">CSV出力</button><button class="danger" type="button" id="clearBtn">履歴クリア</button><button class="secondary" type="button" id="logoutBtn2">ログアウト</button>
+</div>
+<div id="adminRecords" class="card"><h2>点呼履歴</h2><div class="grid"><div><label>表示</label><select id="filterMode"><option value="today">今日のみ</option><option value="all">全期間</option></select></div><div><label>名前検索</label><input id="searchName"></div></div><div style="overflow:auto"><table><thead><tr><th>判定</th><th>日時</th><th>区分</th><th>名前</th><th>車両</th><th>安全チェック</th><th>GPS</th><th>写真</th><th>備考</th></tr></thead><tbody id="recordBody"></tbody></table></div></div>
+<div id="adminDrivers" class="card hidden"><h2>ドライバー登録</h2><div class="grid"><div><label>ドライバー名</label><input id="newDriverName"></div><div><label>電話番号</label><input id="newDriverTel"></div><div><label>免許証期限</label><input id="newDriverLicense" type="date"></div><div><label>備考</label><input id="newDriverMemo"></div></div><button type="button" id="addDriverBtn">登録</button><div style="overflow:auto"><table><thead><tr><th>名前</th><th>電話</th><th>免許期限</th><th>備考</th><th>登録日</th><th>操作</th></tr></thead><tbody id="driverBody"></tbody></table></div></div>
+</section>
+</main>
+
 <script>
-const ADMIN_ID="admin",ADMIN_PASS="1234";const LS_RECORDS="belle_tenko_v2_records",LS_DRIVERS="belle_tenko_v2_drivers";let currentUser="",gpsData=null;if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{})}const $=id=>document.getElementById(id);function nowText(){return new Date().toLocaleString("ja-JP",{hour12:false})}function todayKey(){return new Date().toLocaleDateString("ja-JP")}function getRecords(){return JSON.parse(localStorage.getItem(LS_RECORDS)||"[]")}function setRecords(v){localStorage.setItem(LS_RECORDS,JSON.stringify(v))}function getDrivers(){return JSON.parse(localStorage.getItem(LS_DRIVERS)||"[]")}function setDrivers(v){localStorage.setItem(LS_DRIVERS,JSON.stringify(v))}function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]||m))}
-function login(){const type=$("loginType").value,name=$("loginName").value.trim(),pass=$("loginPassword").value.trim();if(!name||!pass){alert("名前とパスワードを入力してください");return}if(type==="admin"){if(name===ADMIN_ID&&pass===ADMIN_PASS){$("loginBox").classList.add("hidden");$("adminBox").classList.remove("hidden");renderRecords();renderDrivers()}else alert("管理者IDまたはパスワードが違います");return}currentUser=name;$("driverName").textContent=name+" さん";$("loginBox").classList.add("hidden");$("driverBox").classList.remove("hidden")}
-function logout(){location.reload()}function getGPS(){if(!navigator.geolocation){alert("GPS非対応です");return}$("gpsText").value="取得中...";navigator.geolocation.getCurrentPosition(p=>{gpsData={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,time:nowText()};$("gpsText").value=`緯度:${gpsData.lat.toFixed(6)} 経度:${gpsData.lng.toFixed(6)} 精度:${Math.round(gpsData.accuracy)}m`},e=>{gpsData=null;$("gpsText").value="取得失敗";alert("GPS取得に失敗しました。Safariの位置情報を許可してください。")},{enableHighAccuracy:true,timeout:10000,maximumAge:0})}
-const checkIds=["alcDevice","alcNone","healthGood","licenseOk","dailyInspection","vehicleOk","tireOk","cargoOk","restOk","instructionOk"];const checkLabels={alcDevice:"検知器使用",alcNone:"酒気なし",healthGood:"疾病疲労なし",licenseOk:"免許確認",dailyInspection:"日常点検",vehicleOk:"車両異常なし",tireOk:"タイヤ灯火ブレーキ",cargoOk:"積荷確認",restOk:"休憩時間",instructionOk:"注意事項確認"};
-function submitTenko(){const checks={};checkIds.forEach(id=>checks[id]=$(id).checked);const allOk=checkIds.every(id=>checks[id]);if(!allOk&&!confirm("未チェック項目があります。送信しますか？"))return;const file=$("photo").files[0];const save=photo=>{const rec={time:nowText(),date:todayKey(),name:currentUser,type:$("rollcallType").value,method:$("rollcallMethod").value,carNo:$("carNo").value,meter:$("meter").value,alcValue:$("alcValue").value,instruction:$("instruction").value,checks,gps:gpsData,photo:photo||"",note:$("note").value,ok:allOk};const arr=getRecords();arr.unshift(rec);setRecords(arr);alert("送信完了");["carNo","meter","alcValue","instruction","note","gpsText","photo"].forEach(id=>$(id).value="");checkIds.forEach(id=>$(id).checked=false);gpsData=null};if(file){const r=new FileReader();r.onload=()=>save(r.result);r.readAsDataURL(file)}else save("")}
-function showAdmin(mode){$("adminRecords").classList.toggle("hidden",mode!=="records");$("adminDrivers").classList.toggle("hidden",mode!=="drivers");$("adminDaily").classList.toggle("hidden",mode!=="daily");if(mode==="records")renderRecords();if(mode==="drivers")renderDrivers()}
-function renderRecords(){const body=$("recordBody");body.innerHTML="";let arr=getRecords();const mode=$("filterMode").value,q=$("searchName").value.trim();if(mode==="today")arr=arr.filter(r=>r.date===todayKey());if(q)arr=arr.filter(r=>(r.name||"").includes(q));if(!arr.length){body.innerHTML='<tr><td colspan="9">履歴はありません</td></tr>';return}arr.forEach(r=>{const checkText=checkIds.map(id=>`${r.checks?.[id]?"✅":"❌"}${checkLabels[id]}`).join("<br>");const gps=r.gps?`<a class="maplink" target="_blank" href="https://www.google.com/maps?q=${r.gps.lat},${r.gps.lng}">地図</a><br><span class="muted">${Number(r.gps.lat).toFixed(5)},${Number(r.gps.lng).toFixed(5)}<br>${Math.round(r.gps.accuracy||0)}m</span>`:"";const tr=document.createElement("tr");tr.innerHTML=`<td class="${r.ok?'status-ok':'status-ng'}">${r.ok?'OK':'要確認'}</td><td>${esc(r.time)}</td><td>${esc(r.type)}<br><span class="muted">${esc(r.method)}</span></td><td>${esc(r.name)}</td><td>${esc(r.carNo||"")}<br><span class="muted">${esc(r.meter||"")}</span></td><td>${checkText}<br>ALC:${esc(r.alcValue||"")}</td><td>${gps}</td><td>${r.photo?`<img class="photo" src="${r.photo}">`:""}</td><td>${esc(r.instruction||"")}<br>${esc(r.note||"")}</td>`;body.appendChild(tr)})}
-function addDriver(){const d={name:$("newDriverName").value.trim(),tel:$("newDriverTel").value.trim(),license:$("newDriverLicense").value,memo:$("newDriverMemo").value.trim(),created:nowText()};if(!d.name){alert("ドライバー名を入力してください");return}const arr=getDrivers();arr.unshift(d);setDrivers(arr);["newDriverName","newDriverTel","newDriverLicense","newDriverMemo"].forEach(id=>$(id).value="");renderDrivers()}function renderDrivers(){const body=$("driverBody");body.innerHTML="";const arr=getDrivers();if(!arr.length){body.innerHTML='<tr><td colspan="6">登録ドライバーはありません</td></tr>';return}arr.forEach((d,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${esc(d.name)}</td><td>${esc(d.tel)}</td><td>${esc(d.license)}</td><td>${esc(d.memo)}</td><td>${esc(d.created)}</td><td><button class="danger" onclick="deleteDriver(${i})">削除</button></td>`;body.appendChild(tr)})}function deleteDriver(i){const arr=getDrivers();arr.splice(i,1);setDrivers(arr);renderDrivers()}function downloadCSV(){const rows=[["判定","日時","点呼区分","点呼方法","名前","車両番号","メーター","アルコール数値","緯度","経度","GPS精度m","安全チェック","指示事項","備考"]];getRecords().forEach(r=>rows.push([r.ok?"OK":"要確認",r.time,r.type,r.method,r.name,r.carNo||"",r.meter||"",r.alcValue||"",r.gps?.lat||"",r.gps?.lng||"",r.gps?.accuracy||"",checkIds.map(id=>`${checkLabels[id]}:${r.checks?.[id]?"OK":"NG"}`).join(" / "),r.instruction||"",r.note||""]));const csv=rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("
-");const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="belle-house-tenko-v2.csv";a.click()}function clearRecords(){if(confirm("点呼履歴を削除しますか？")){localStorage.removeItem(LS_RECORDS);renderRecords()}}
-</script></body></html>
+(function(){
+const ADMIN_ID="admin", ADMIN_PASS="1234";
+const LS_RECORDS="belle_tenko_v2_records", LS_DRIVERS="belle_tenko_v2_drivers";
+let currentUser="", gpsData=null;
+const checkItems=[
+["alcDevice","アルコール検知器を使用した"],["alcNone","酒気帯びなし"],["healthGood","疾病・疲労・睡眠不足なし"],["licenseOk","運転免許証を携帯・有効確認"],["dailyInspection","日常点検を実施"],["vehicleOk","車両に異常なし"],["tireOk","タイヤ・灯火・ブレーキ確認"],["cargoOk","積荷・荷崩れ防止確認"],["restOk","休憩・拘束時間に無理なし"],["instructionOk","運行上の注意事項を確認"]];
+const $=id=>document.getElementById(id);
+const nowText=()=>new Date().toLocaleString("ja-JP",{hour12:false});
+const todayKey=()=>new Date().toLocaleDateString("ja-JP");
+const getRecords=()=>JSON.parse(localStorage.getItem(LS_RECORDS)||"[]");
+const setRecords=v=>localStorage.setItem(LS_RECORDS,JSON.stringify(v));
+const getDrivers=()=>JSON.parse(localStorage.getItem(LS_DRIVERS)||"[]");
+const setDrivers=v=>localStorage.setItem(LS_DRIVERS,JSON.stringify(v));
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+function initChecks(){ $("checkArea").innerHTML=checkItems.map(([id,label])=>`<div class="check"><label><input type="checkbox" id="${id}">${label}</label></div>`).join(""); }
+function login(){
+ const type=$("loginType").value, name=$("loginName").value.trim(), pass=$("loginPassword").value.trim();
+ if(!name||!pass){alert("名前とパスワードを入力してください");return;}
+ if(type==="admin"){
+   if(name===ADMIN_ID && pass===ADMIN_PASS){$("loginBox").classList.add("hidden");$("adminBox").classList.remove("hidden");renderRecords();renderDrivers();}
+   else alert("管理者IDまたはパスワードが違います");
+   return;
+ }
+ currentUser=name; $("driverName").textContent=name+" さん"; $("loginBox").classList.add("hidden"); $("driverBox").classList.remove("hidden");
+}
+function logout(){location.reload();}
+function getGPS(){
+ if(!navigator.geolocation){alert("GPS非対応です");return;}
+ $("gpsText").value="取得中...";
+ navigator.geolocation.getCurrentPosition(p=>{gpsData={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};$("gpsText").value=`緯度:${gpsData.lat.toFixed(6)} 経度:${gpsData.lng.toFixed(6)} 精度:${Math.round(gpsData.accuracy)}m`;},()=>{gpsData=null;$("gpsText").value="取得失敗";alert("GPS取得に失敗しました。位置情報を許可してください。");},{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+}
+function submitTenko(){
+ const checks={}; checkItems.forEach(([id])=>checks[id]=$(id).checked);
+ const allOk=checkItems.every(([id])=>checks[id]);
+ if(!allOk&&!confirm("未チェック項目があります。送信しますか？"))return;
+ const save=photo=>{const rec={ok:allOk,time:nowText(),date:todayKey(),name:currentUser,type:$("rollcallType").value,method:$("rollcallMethod").value,carNo:$("carNo").value,meter:$("meter").value,alcValue:$("alcValue").value,instruction:$("instruction").value,checks,gps:gpsData,photo:photo||"",note:$("note").value}; const arr=getRecords();arr.unshift(rec);setRecords(arr);alert("送信完了");};
+ const file=$("photo").files[0]; if(file){const r=new FileReader();r.onload=()=>save(r.result);r.readAsDataURL(file);}else save("");
+}
+function renderRecords(){
+ const body=$("recordBody");body.innerHTML="";let arr=getRecords(); const mode=$("filterMode").value, q=$("searchName").value.trim();
+ if(mode==="today")arr=arr.filter(r=>r.date===todayKey()); if(q)arr=arr.filter(r=>(r.name||"").includes(q));
+ if(!arr.length){body.innerHTML='<tr><td colspan="9">履歴はありません</td></tr>';return;}
+ arr.forEach(r=>{const checks=checkItems.map(([id,label])=>(r.checks&&r.checks[id]?"✅":"❌")+label).join("<br>"); const gps=r.gps?`<a target="_blank" href="https://www.google.com/maps?q=${r.gps.lat},${r.gps.lng}">地図</a>`:""; const tr=document.createElement("tr"); tr.innerHTML=`<td class="${r.ok?'status-ok':'status-ng'}">${r.ok?'OK':'要確認'}</td><td>${esc(r.time)}</td><td>${esc(r.type)}<br>${esc(r.method)}</td><td>${esc(r.name)}</td><td>${esc(r.carNo)}<br>${esc(r.meter)}</td><td>${checks}<br>ALC:${esc(r.alcValue)}</td><td>${gps}</td><td>${r.photo?`<img class="photo" src="${r.photo}">`:""}</td><td>${esc(r.instruction)}<br>${esc(r.note)}</td>`; body.appendChild(tr);});
+}
+function showAdmin(which){$("adminRecords").classList.toggle("hidden",which!=="records");$("adminDrivers").classList.toggle("hidden",which!=="drivers"); if(which==="records")renderRecords(); if(which==="drivers")renderDrivers();}
+function addDriver(){const d={name:$("newDriverName").value.trim(),tel:$("newDriverTel").value.trim(),license:$("newDriverLicense").value,memo:$("newDriverMemo").value.trim(),created:nowText()}; if(!d.name){alert("ドライバー名を入力してください");return;} const arr=getDrivers();arr.unshift(d);setDrivers(arr);renderDrivers();}
+function renderDrivers(){const body=$("driverBody");body.innerHTML="";const arr=getDrivers(); if(!arr.length){body.innerHTML='<tr><td colspan="6">登録ドライバーはありません</td></tr>';return;} arr.forEach((d,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${esc(d.name)}</td><td>${esc(d.tel)}</td><td>${esc(d.license)}</td><td>${esc(d.memo)}</td><td>${esc(d.created)}</td><td><button class="danger" type="button" data-del="${i}">削除</button></td>`;body.appendChild(tr);});}
+function downloadCSV(){const rows=[["判定","日時","点呼区分","点呼方法","名前","車両番号","メーター","アルコール数値","緯度","経度","安全チェック","指示事項","備考"]]; getRecords().forEach(r=>rows.push([r.ok?"OK":"要確認",r.time,r.type,r.method,r.name,r.carNo||"",r.meter||"",r.alcValue||"",r.gps?.lat||"",r.gps?.lng||"",checkItems.map(([id,label])=>label+":"+(r.checks?.[id]?"OK":"NG")).join(" / "),r.instruction||"",r.note||""])); const csv=rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\r\n"); const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}); const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="belle-house-tenko-v2.csv";a.click();}
+function clearRecords(){if(confirm("点呼履歴を削除しますか？")){localStorage.removeItem(LS_RECORDS);renderRecords();}}
+document.addEventListener("DOMContentLoaded",()=>{initChecks(); $("loginBtn").addEventListener("click",login); $("gpsBtn").addEventListener("click",getGPS); $("submitBtn").addEventListener("click",submitTenko); $("logoutBtn1").addEventListener("click",logout); $("logoutBtn2").addEventListener("click",logout); $("tabRecords").addEventListener("click",()=>showAdmin("records")); $("tabDrivers").addEventListener("click",()=>showAdmin("drivers")); $("csvBtn").addEventListener("click",downloadCSV); $("clearBtn").addEventListener("click",clearRecords); $("addDriverBtn").addEventListener("click",addDriver); $("filterMode").addEventListener("change",renderRecords); $("searchName").addEventListener("input",renderRecords); $("driverBody").addEventListener("click",e=>{if(e.target.dataset.del!==undefined){const arr=getDrivers();arr.splice(Number(e.target.dataset.del),1);setDrivers(arr);renderDrivers();}});});
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}
+})();
+</script>
+</body>
+</html>
