@@ -33,14 +33,14 @@
   <label>ログイン区分</label>
   <select id="loginType">
     <option value="driver">ドライバー</option>
-    <option value="佐藤清貴">管理者</option>
+    <option value="admin">管理者</option>
   </select>
   <label>名前または管理者ID</label>
-  <input id="loginName" placeholder="例：佐藤 / 佐藤清貴" />
+  <input id="loginName" placeholder="例：佐藤 / admin" />
   <label>パスワード</label>
   <input id="loginPassword" type="password" placeholder="管理者は 1234" />
   <button type="button" onclick="login()">ログイン</button>
-  <p class="small">ドライバーは名前と任意のパスワードで入れます。管理者は 佐藤清貴 / 1234。</p>
+  <p class="small">ドライバーは名前と任意のパスワードで入れます。管理者は admin / 1234。</p>
 </div>
 
 <div class="box hidden" id="driverBox">
@@ -95,7 +95,7 @@
   <button type="button" class="sub" onclick="logout()">ログアウト</button>
 </div>
 
-<div class="box hidden" id="佐藤清貴Box">
+<div class="box hidden" id="adminBox">
   <h2>管理者画面</h2>
   <button type="button" onclick="loadRecords()">最新の点呼を表示</button>
   <button type="button" class="sub" onclick="downloadCsv()">CSV出力</button>
@@ -139,10 +139,10 @@ function login() {
     return;
   }
 
-  if (type === "佐藤清貴") {
-    if (name === "佐藤清貴" && pass === "1234") {
+  if (type === "admin") {
+    if (name === "admin" && pass === "1234") {
       document.getElementById("loginBox").classList.add("hidden");
-      document.getElementById("佐藤清貴Box").classList.remove("hidden");
+      document.getElementById("adminBox").classList.remove("hidden");
       loadRecords();
     } else {
       alert("管理者IDまたはパスワードが違います");
