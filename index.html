@@ -140,7 +140,7 @@ function login() {
   }
 
   if (type === "admin") {
-    if (name === "佐藤清貴" && pass === "1234") {
+    if (name === "admin" && pass === "1234") {
       document.getElementById("loginBox").classList.add("hidden");
       document.getElementById("adminBox").classList.remove("hidden");
       loadRecords();
@@ -200,23 +200,14 @@ async function submitTenko() {
 
   try {
     if (file) {
-  try {
-    setStatus("写真をアップロード中...");
-
-    const nowMs = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const fileName = "tenko_photos/" + currentUser + "_" + nowMs + "_" + safeName;
-
-    const storageRef = storage.ref(fileName);
-    await storageRef.put(file);
-    photoUrl = await storageRef.getDownloadURL();
-
-  } catch (e) {
-    console.log("写真アップロードをスキップ", e);
-    photoUrl = "";
-    setStatus("写真は保存できませんでした。点呼だけ送信します...");
-  }
-}
+      setStatus("写真をアップロード中...");
+      const nowMs = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const fileName = "tenko_photos/" + currentUser + "_" + nowMs + "_" + safeName;
+      const storageRef = storage.ref(fileName);
+      await storageRef.put(file);
+      photoUrl = await storageRef.getDownloadURL();
+    }
 
     setStatus("点呼データを保存中...");
     await db.collection("tenkoRecords").add({
